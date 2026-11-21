@@ -203,7 +203,7 @@ function ActivityChart({ days }: { days: ItemsStats["created_per_day"] }) {
 
 function Dashboard() {
   const { user: currentUser } = useAuth()
-  const { data: stats, isPending } = useQuery(statsQuery)
+  const { data: stats, isPending, isError, refetch } = useQuery(statsQuery)
 
   return (
     <div className="flex flex-col gap-6">
@@ -218,7 +218,21 @@ function Dashboard() {
         </p>
       </div>
 
-      {isPending || !stats ? (
+      {isError ? (
+        <div className="rounded-lg border border-destructive/40 p-6 text-sm">
+          <p className="font-medium">Couldn't load your dashboard.</p>
+          <p className="text-muted-foreground">
+            Try again, or log out and back in if your session expired.
+          </p>
+          <button
+            type="button"
+            onClick={() => refetch()}
+            className="mt-3 underline underline-offset-4"
+          >
+            Retry
+          </button>
+        </div>
+      ) : isPending || !stats ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {[0, 1, 2, 3].map((i) => (
             <Skeleton key={i} className="h-32" />
