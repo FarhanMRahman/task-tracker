@@ -3,7 +3,6 @@ import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { Pencil } from "lucide-react"
 import { useState } from "react"
 import { useForm } from "react-hook-form"
-import { z } from "zod"
 
 import { type ItemPublic, ItemsService } from "@/client"
 import { Button } from "@/components/ui/button"
@@ -29,13 +28,12 @@ import { Input } from "@/components/ui/input"
 import { LoadingButton } from "@/components/ui/loading-button"
 import useCustomToast from "@/hooks/useCustomToast"
 import { handleError } from "@/utils"
-
-const formSchema = z.object({
-  title: z.string().min(1, { message: "Title is required" }),
-  description: z.string().optional(),
-})
-
-type FormData = z.infer<typeof formSchema>
+import {
+  ItemExtraFields,
+  type ItemFormData,
+  itemFormSchema,
+  toItemPayload,
+} from "./itemMeta"
 
 interface EditItemProps {
   item: ItemPublic
@@ -47,19 +45,25 @@ const EditItem = ({ item, onSuccess }: EditItemProps) => {
   const queryClient = useQueryClient()
   const { showSuccessToast, showErrorToast } = useCustomToast()
 
-  const form = useForm<FormData>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<ItemFormData>({
+    resolver: zodResolver(itemFormSchema),
     mode: "onBlur",
     criteriaMode: "all",
     defaultValues: {
       title: item.title,
       description: item.description ?? undefined,
+      status: item.status ?? "todo",
+      priority: item.priority ?? "medium",
+      due_date: item.due_date ?? "",
     },
   })
 
   const mutation = useMutation({
-    mutationFn: (data: FormData) =>
-      ItemsService.updateItem({ path: { id: item.id }, body: data }),
+    mutationFn: (data: ItemFormData) =>
+      ItemsService.updateItem({
+        path: { id: item.id },
+        body: toItemPayload(data),
+      }),
     onSuccess: () => {
       showSuccessToast("Item updated successfully")
       setIsOpen(false)
@@ -71,7 +75,7 @@ const EditItem = ({ item, onSuccess }: EditItemProps) => {
     },
   })
 
-  const onSubmit = (data: FormData) => {
+  const onSubmit = (data: ItemFormData) => {
     mutation.mutate(data)
   }
 
@@ -123,6 +127,8 @@ const EditItem = ({ item, onSuccess }: EditItemProps) => {
                   </FormItem>
                 )}
               />
+
+              <ItemExtraFields control={form.control} />
             </div>
 
             <DialogFooter>

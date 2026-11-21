@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { useCopyToClipboard } from "@/hooks/useCopyToClipboard"
 import { cn } from "@/lib/utils"
 import { ItemActionsMenu } from "./ItemActionsMenu"
+import { DueDate, PriorityBadge, StatusBadge } from "./itemMeta"
 
 function CopyId({ id }: { id: string }) {
   const [copiedText, copy] = useCopyToClipboard()
@@ -43,6 +44,28 @@ export const columns: ColumnDef<DataTableFeatures, ItemPublic>[] = [
     header: "Title",
     cell: ({ row }) => (
       <span className="font-medium">{row.original.title}</span>
+    ),
+  },
+  {
+    accessorKey: "status",
+    header: "Status",
+    cell: ({ row }) => <StatusBadge status={row.original.status ?? "todo"} />,
+  },
+  {
+    accessorKey: "priority",
+    header: "Priority",
+    cell: ({ row }) => (
+      <PriorityBadge priority={row.original.priority ?? "medium"} />
+    ),
+  },
+  {
+    accessorKey: "due_date",
+    header: "Due",
+    cell: ({ row }) => (
+      <DueDate
+        dueDate={row.original.due_date}
+        status={row.original.status ?? "todo"}
+      />
     ),
   },
   {

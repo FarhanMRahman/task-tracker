@@ -3,9 +3,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { Plus } from "lucide-react"
 import { useState } from "react"
 import { useForm } from "react-hook-form"
-import { z } from "zod"
-
-import { type ItemCreate, ItemsService } from "@/client"
+import { ItemsService } from "@/client"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -29,31 +27,34 @@ import { Input } from "@/components/ui/input"
 import { LoadingButton } from "@/components/ui/loading-button"
 import useCustomToast from "@/hooks/useCustomToast"
 import { handleError } from "@/utils"
-
-const formSchema = z.object({
-  title: z.string().min(1, { message: "Title is required" }),
-  description: z.string().optional(),
-})
-
-type FormData = z.infer<typeof formSchema>
+import {
+  ItemExtraFields,
+  type ItemFormData,
+  itemFormSchema,
+  toItemPayload,
+} from "./itemMeta"
 
 const AddItem = () => {
   const [isOpen, setIsOpen] = useState(false)
   const queryClient = useQueryClient()
   const { showSuccessToast, showErrorToast } = useCustomToast()
 
-  const form = useForm<FormData>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<ItemFormData>({
+    resolver: zodResolver(itemFormSchema),
     mode: "onBlur",
     criteriaMode: "all",
     defaultValues: {
       title: "",
       description: "",
+      status: "todo",
+      priority: "medium",
+      due_date: "",
     },
   })
 
   const mutation = useMutation({
-    mutationFn: (data: ItemCreate) => ItemsService.createItem({ body: data }),
+    mutationFn: (data: ItemFormData) =>
+      ItemsService.createItem({ body: toItemPayload(data) }),
     onSuccess: () => {
       showSuccessToast("Item created successfully")
       form.reset()
@@ -65,7 +66,7 @@ const AddItem = () => {
     },
   })
 
-  const onSubmit = (data: FormData) => {
+  const onSubmit = (data: ItemFormData) => {
     mutation.mutate(data)
   }
 
@@ -121,6 +122,8 @@ const AddItem = () => {
                   </FormItem>
                 )}
               />
+
+              <ItemExtraFields control={form.control} />
             </div>
 
             <DialogFooter>
