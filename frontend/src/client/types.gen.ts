@@ -35,6 +35,34 @@ export type Body_login_login_access_token = {
 };
 
 /**
+ * CountByKey
+ */
+export type CountByKey = {
+    /**
+     * Key
+     */
+    key: string;
+    /**
+     * Count
+     */
+    count: number;
+};
+
+/**
+ * DailyCount
+ */
+export type DailyCount = {
+    /**
+     * Day
+     */
+    day: string;
+    /**
+     * Count
+     */
+    count: number;
+};
+
+/**
  * HTTPValidationError
  */
 export type HTTPValidationError = {
@@ -56,7 +84,18 @@ export type ItemCreate = {
      * Description
      */
     description?: string | null;
+    status?: ItemStatus;
+    priority?: ItemPriority;
+    /**
+     * Due Date
+     */
+    due_date?: string | null;
 };
+
+/**
+ * ItemPriority
+ */
+export type ItemPriority = 'low' | 'medium' | 'high';
 
 /**
  * ItemPublic
@@ -70,6 +109,12 @@ export type ItemPublic = {
      * Description
      */
     description?: string | null;
+    status?: ItemStatus;
+    priority?: ItemPriority;
+    /**
+     * Due Date
+     */
+    due_date?: string | null;
     /**
      * Id
      */
@@ -82,7 +127,16 @@ export type ItemPublic = {
      * Created At
      */
     created_at?: string | null;
+    /**
+     * Updated At
+     */
+    updated_at?: string | null;
 };
+
+/**
+ * ItemStatus
+ */
+export type ItemStatus = 'todo' | 'in_progress' | 'done';
 
 /**
  * ItemUpdate
@@ -96,6 +150,12 @@ export type ItemUpdate = {
      * Description
      */
     description?: string | null;
+    status?: ItemStatus | null;
+    priority?: ItemPriority | null;
+    /**
+     * Due Date
+     */
+    due_date?: string | null;
 };
 
 /**
@@ -110,6 +170,40 @@ export type ItemsPublic = {
      * Count
      */
     count: number;
+};
+
+/**
+ * ItemsStats
+ */
+export type ItemsStats = {
+    /**
+     * Total
+     */
+    total: number;
+    /**
+     * Overdue
+     */
+    overdue: number;
+    /**
+     * Due This Week
+     */
+    due_this_week: number;
+    /**
+     * Completion Rate
+     */
+    completion_rate: number;
+    /**
+     * By Status
+     */
+    by_status: Array<CountByKey>;
+    /**
+     * By Priority
+     */
+    by_priority: Array<CountByKey>;
+    /**
+     * Created Per Day
+     */
+    created_per_day: Array<DailyCount>;
 };
 
 /**
@@ -784,6 +878,26 @@ export type itemsReadItemsData = {
          * Limit
          */
         limit?: number;
+        /**
+         * Q
+         */
+        q?: string | null;
+        /**
+         * Status
+         */
+        status?: ItemStatus | null;
+        /**
+         * Priority
+         */
+        priority?: ItemPriority | null;
+        /**
+         * Overdue
+         */
+        overdue?: boolean;
+        /**
+         * Sort
+         */
+        sort?: 'created_at' | '-created_at' | 'updated_at' | '-updated_at' | 'due_date' | '-due_date' | 'priority' | '-priority' | 'title' | '-title';
     };
     url: '/api/v1/items/';
 };
@@ -830,6 +944,22 @@ export type itemsCreateItemResponses = {
 };
 
 export type itemsCreateItemResponse = itemsCreateItemResponses[keyof itemsCreateItemResponses];
+
+export type itemsReadItemsStatsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/items/stats';
+};
+
+export type itemsReadItemsStatsResponses = {
+    /**
+     * Successful Response
+     */
+    200: ItemsStats;
+};
+
+export type itemsReadItemsStatsResponse = itemsReadItemsStatsResponses[keyof itemsReadItemsStatsResponses];
 
 export type itemsDeleteItemData = {
     body?: never;
