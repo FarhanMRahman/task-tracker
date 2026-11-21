@@ -1,7 +1,9 @@
 import uuid
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
+from enum import StrEnum
 
 from pydantic import EmailStr
+from sqlalchemy import Index
 from sqlmodel import Field, Relationship, SQLModel
 
 
@@ -67,9 +69,24 @@ class UsersPublic(SQLModel):
 
 
 # Shared properties
+class ItemStatus(StrEnum):
+    todo = "todo"
+    in_progress = "in_progress"
+    done = "done"
+
+
+class ItemPriority(StrEnum):
+    low = "low"
+    medium = "medium"
+    high = "high"
+
+
 class ItemBase(SQLModel):
     title: str = Field(min_length=1, max_length=255)
     description: str | None = Field(default=None, max_length=255)
+    status: ItemStatus = ItemStatus.todo
+    priority: ItemPriority = ItemPriority.medium
+    due_date: date | None = None
 
 
 # Properties to receive on item creation
@@ -77,16 +94,23 @@ class ItemCreate(ItemBase):
     pass
 
 
-# Properties to receive on item update
+# Properties to receive on item update (all optional: partial update)
 class ItemUpdate(SQLModel):
     title: str | None = Field(default=None, min_length=1, max_length=255)
     description: str | None = Field(default=None, max_length=255)
+    status: ItemStatus | None = None
+    priority: ItemPriority | None = None
+    due_date: date | None = None
 
 
 # Database model, database table inferred from class name
 class Item(ItemBase, table=True):
+    # Composite index: every list query filters by owner and sorts by created_at
+    __table_args__ = (Index("ix_item_owner_id_created_at", "owner_id", "created_at"),)
+
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     created_at: datetime | None = Field(default_factory=get_datetime_utc)
+    updated_at: datetime | None = Field(default_factory=get_datetime_utc)
     owner_id: uuid.UUID = Field(
         foreign_key="user.id", nullable=False, ondelete="CASCADE"
     )
@@ -98,11 +122,33 @@ class ItemPublic(ItemBase):
     id: uuid.UUID
     owner_id: uuid.UUID
     created_at: datetime | None = None
+    updated_at: datetime | None = None
 
 
 class ItemsPublic(SQLModel):
     data: list[ItemPublic]
     count: int
+
+
+# Dashboard aggregates
+class CountByKey(SQLModel):
+    key: str
+    count: int
+
+
+class DailyCount(SQLModel):
+    day: date
+    count: int
+
+
+class ItemsStats(SQLModel):
+    total: int
+    overdue: int
+    due_this_week: int
+    completion_rate: float
+    by_status: list[CountByKey]
+    by_priority: list[CountByKey]
+    created_per_day: list[DailyCount]
 
 
 # Generic message
