@@ -1,4 +1,44 @@
-# Full Stack FastAPI Template
+# Task Tracker
+
+A multi-user task tracker: people log in, manage tasks with status, priority and due dates, filter and search them, and see a live dashboard. Admins see everything and manage users.
+
+Built on the official [Full Stack FastAPI Template](https://github.com/fastapi/full-stack-fastapi-template) (React + TypeScript, FastAPI, PostgreSQL, Docker Compose) and extended with Claude Code as a pair programmer: I set the design, reviewed every diff and fixed generated code where it was wrong.
+
+**Design doc:** [docs/design.md](docs/design.md) (requirements, entities, API, architecture, data model, deep dives).
+
+## What I added to the template
+
+| Area | Change |
+| --- | --- |
+| Data model | `status` and `priority` (Postgres enums), `due_date`, `updated_at`, composite index on `(owner_id, created_at)` |
+| Migration | Alembic autogenerate output fixed by hand: create enum types, server defaults for existing rows, backfill `updated_at`, drop enums on downgrade |
+| Items API | Search (`q`), filters (`status`, `priority`, `overdue`), allow-listed `sort`, capped `limit`; one query builder with a single ownership helper |
+| Stats API | `GET /api/v1/items/stats`: totals, completion rate, overdue, due this week, 14-day activity, breakdowns, all aggregated in SQL |
+| Frontend | Dashboard with stat cards, activity chart and breakdowns; Items page with debounced search and filters kept in the URL; status, priority and due date in forms and table |
+| Auth fix | A valid token for a deleted user returned 404 and the UI hung; it now returns 401 so the app logs the user out |
+| Tests | 11 new backend tests (filters, sorting, permission isolation, stats, the 401 fix); 69 in total |
+| Branding | Renamed to Task Tracker with a text + icon logo |
+
+## Run it locally
+
+```bash
+# First edit .env: replace every "changethis" (SECRET_KEY, FIRST_SUPERUSER_PASSWORD, POSTGRES_PASSWORD)
+docker compose up -d db backend mailpit proxy adminer
+docker compose exec backend bash scripts/prestart.sh   # migrations + first admin user
+docker compose exec backend python app/seed_demo.py    # demo users and 32 items
+```
+
+Open http://localhost:8000 (app), http://localhost:8000/docs (API), http://localhost:8080 (Adminer), http://localhost:8025 (Mailpit).
+
+Demo logins: the admin from `FIRST_SUPERUSER` in `.env`, and `alex@example.com` / `demo-password-123` (a regular user who sees only their own items).
+
+Run the backend tests with `docker compose exec backend bash scripts/tests-start.sh`. Note: the tests use the same database and clear it at the end, so run the prestart and seed commands again afterwards.
+
+---
+
+The original template README follows.
+
+## Full Stack FastAPI Template
 
 [![Test Docker Compose](../../actions/workflows/test-docker-compose.yml/badge.svg)](../../actions/workflows/test-docker-compose.yml)
 [![Test Backend](../../actions/workflows/test-backend.yml/badge.svg)](../../actions/workflows/test-backend.yml)
