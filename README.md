@@ -6,6 +6,10 @@ A multi-user task tracker. People log in, manage their tasks with status, priori
 
 **Design doc:** [docs/design.md](docs/design.md) covers requirements, entities, API, data model and design trade-offs in detail.
 
+![Dashboard: stat cards, 14-day activity chart, breakdowns by status and priority](docs/screenshots/dashboard.png)
+
+![Tasks list with search, status and priority filters, sorting and an overdue view](docs/screenshots/items.png)
+
 ## Features
 
 **For every user**
