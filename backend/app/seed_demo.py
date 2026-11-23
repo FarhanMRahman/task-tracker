@@ -11,7 +11,7 @@ import logging
 import random
 from datetime import UTC, date, datetime, timedelta
 
-from sqlmodel import Session, delete, select
+from sqlmodel import Session, col, delete, select
 
 from app import crud
 from app.core.config import settings
@@ -61,7 +61,7 @@ def ensure_demo_user(session: Session) -> User:
 
 
 def seed_items(session: Session, owner: User, count: int, rng: random.Random) -> None:
-    session.exec(delete(Item).where(Item.owner_id == owner.id))  # type: ignore[call-overload]
+    session.exec(delete(Item).where(col(Item.owner_id) == owner.id))
     today = date.today()
     now = datetime.now(UTC)
     for i in range(count):
@@ -69,7 +69,12 @@ def seed_items(session: Session, owner: User, count: int, rng: random.Random) ->
         status = rng.choices(list(ItemStatus), weights=[5, 3, 4])[0]
         priority = rng.choices(list(ItemPriority), weights=[3, 5, 2])[0]
         # Mix of past (some overdue), upcoming and no due date
-        due = rng.choice([None, *[today + timedelta(days=d) for d in (-6, -3, -1, 1, 2, 4, 6, 10, 20)]])
+        due = rng.choice(
+            [
+                None,
+                *[today + timedelta(days=d) for d in (-6, -3, -1, 1, 2, 4, 6, 10, 20)],
+            ]
+        )
         created = now - timedelta(days=rng.randint(0, 13), hours=rng.randint(0, 23))
         session.add(
             Item(

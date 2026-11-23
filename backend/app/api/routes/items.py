@@ -3,8 +3,8 @@ from datetime import date, timedelta
 from typing import Annotated, Any, Literal
 
 from fastapi import APIRouter, HTTPException, Query
-from sqlalchemy import cast, nulls_last, or_
 from sqlalchemy import Date as SADate
+from sqlalchemy import cast, nulls_last, or_
 from sqlmodel import col, func, select
 
 from app.api.deps import CurrentUser, SessionDep
@@ -76,14 +76,16 @@ def read_items(
             or_(col(Item.title).ilike(pattern), col(Item.description).ilike(pattern))
         )
     if status:
-        filters.append(Item.status == status)
+        filters.append(col(Item.status) == status)
     if priority:
-        filters.append(Item.priority == priority)
+        filters.append(col(Item.priority) == priority)
     if overdue:
         filters.append(col(Item.due_date) < date.today())
-        filters.append(Item.status != ItemStatus.done)
+        filters.append(col(Item.status) != ItemStatus.done)
 
-    count_statement = visible_items(select(func.count()).select_from(Item), current_user)
+    count_statement = visible_items(
+        select(func.count()).select_from(Item), current_user
+    )
     count = session.exec(count_statement.where(*filters)).one()
 
     column = SORT_COLUMNS[sort.lstrip("-")]
@@ -111,7 +113,7 @@ def read_items_stats(session: SessionDep, current_user: CurrentUser) -> Any:
 
     def scalar(*conditions: Any) -> int:
         statement = visible_items(select(func.count()).select_from(Item), current_user)
-        return session.exec(statement.where(*conditions)).one()
+        return int(session.exec(statement.where(*conditions)).one())
 
     total = scalar()
     done = scalar(Item.status == ItemStatus.done)
@@ -155,7 +157,10 @@ def read_items_stats(session: SessionDep, current_user: CurrentUser) -> Any:
             for p in ItemPriority
         ],
         created_per_day=[
-            DailyCount(day=since + timedelta(days=i), count=daily.get(since + timedelta(days=i), 0))
+            DailyCount(
+                day=since + timedelta(days=i),
+                count=daily.get(since + timedelta(days=i), 0),
+            )
             for i in range(14)
         ],
     )
