@@ -93,8 +93,8 @@ Requirements: Docker Desktop.
 ```bash
 # 1. Edit .env and replace every "changethis" (SECRET_KEY, FIRST_SUPERUSER_PASSWORD, POSTGRES_PASSWORD)
 
-# 2. Start the services
-docker compose up -d db backend mailpit proxy adminer
+# 2. Build and start the services (--build makes sure the image matches this checkout)
+docker compose up -d --build db backend mailpit proxy adminer
 
 # 3. Run migrations and create the first admin user
 docker compose exec backend bash scripts/prestart.sh

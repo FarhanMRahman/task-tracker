@@ -17,6 +17,7 @@ Frontend (from `frontend/`):
 - Regenerate the API client after backend API changes: `curl -s localhost:8000/api/v1/openapi.json -o openapi.json && bun run generate-client`.
 - Checks: `bunx tsc -p tsconfig.build.json --noEmit` and `bun run lint`.
 - The frontend is built into the backend image: `docker compose up -d --build backend` to see UI changes at http://localhost:8000.
+- Always start the stack with `--build`: the image is tagged `backend:latest`, so without it Docker may reuse an image built from different code.
 
 ## Conventions
 - Ownership is enforced server-side (see `visible_items`); never trust an owner id from a non-admin client.
